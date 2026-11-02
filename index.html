@@ -68,6 +68,30 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
 .win h2{margin:0;font-size:22px}
 .win p{margin:0;color:var(--mute);font-size:14px}
 .win .btn{justify-self:center;margin-top:6px;background:var(--live);color:var(--panel);border-color:var(--live);font-weight:700}
+.lb{display:grid;gap:10px}
+.lbhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.lbhead h2{margin:0;font-size:17px}
+.lbhead .day{font-family:var(--mono);font-size:12px;color:var(--mute);margin-left:6px;font-weight:500}
+.lb ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.lb li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 10px;border-radius:8px;background:var(--tile)}
+.lb li.me{box-shadow:inset 0 0 0 2px var(--live)}
+.lb .rk{font-family:var(--mono);font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+.lb li:nth-child(1) .rk{color:var(--switch)}
+.lb .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .sc{font-family:var(--mono);font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.lb .note{margin:0;font-size:13px;color:var(--mute)}
+.submit{display:grid;gap:6px;text-align:left;margin-top:4px}
+.submit label{font-size:13px;color:var(--mute)}
+.submit .row{display:flex;gap:6px}
+.submit input{flex:1;min-width:0;font:500 15px var(--sans);padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.submit input:focus-visible{outline:3px solid var(--lock);outline-offset:1px}
+.submit .btn{margin:0;background:var(--live);color:var(--panel);border-color:var(--live);font-weight:700}
+.submit .msg{margin:0;font-size:13px;color:var(--mute)}
+.win .auto{margin:2px 0 0;font-size:14px;color:var(--ink)}
+.win .link{appearance:none;border:0;background:none;padding:0;font:inherit;color:var(--lock);text-decoration:underline;cursor:pointer}
+.win .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.win .btns .btn{margin-top:6px}
+.win .btn.alt{background:var(--panel);color:var(--ink);border-color:var(--line);font-weight:500}
 .rules{font-size:14px;color:var(--mute);display:grid;gap:4px}
 .rules h2{font-size:15px;color:var(--ink);margin:0 0 2px}
 .rules ul{margin:0;padding-left:18px;display:grid;gap:2px}
@@ -86,6 +110,9 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
   </header>
 
   <div class="tools">
+    <div class="seg" id="modes" role="group" aria-label="模式">
+      <button type="button" data-m="daily">每日一題</button><button type="button" data-m="free">自由練習</button>
+    </div>
     <div class="seg" id="sizes" role="group" aria-label="大小">
       <button type="button" data-n="5">5×5</button><button type="button" data-n="6">6×6</button><button type="button" data-n="7">7×7</button><button type="button" data-n="9">9×9</button>
     </div>
@@ -96,8 +123,10 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
   <div class="status" aria-live="polite">
     <span>連線中 <b id="sOn">0</b> / <b id="sAll">0</b> 台</span>
     <span>轉了 <b id="sMoves">0</b> 下</span>
+    <span>時間 <b id="sTime">0:00</b></span>
     <span>提示 <b id="sHints">0</b></span>
     <span>這個大小最佳 <b id="sBest">—</b></span>
+    <span id="onlineWrap" hidden>● 目前 <b id="sOnline">1</b> 人在線</span>
     <span id="playsWrap" hidden>網站被打開 <b id="sPlays">0</b> 次</span>
   </div>
 
@@ -107,14 +136,27 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
       <div class="card">
         <h2>全部連線 ✓</h2>
         <p id="winText"></p>
-        <button class="btn" id="againBtn" type="button">下一題</button>
+        <p class="auto" id="autoLine" hidden><span id="autoText"></span> <button class="link" id="renameBtn" type="button">改名字</button></p>
+        <form class="submit" id="submitForm" hidden>
+          <label for="nameIn">留下名字，登上今日排行榜</label>
+          <div class="row"><input id="nameIn" maxlength="12" autocomplete="nickname" placeholder="你的暱稱" required><button class="btn" type="submit" id="submitBtn">送出</button></div>
+          <p class="msg" id="submitMsg"></p>
+        </form>
+        <div class="btns"><button class="btn" id="againBtn" type="button">下一題</button><button class="btn alt" id="toLbBtn" type="button" hidden>看排行榜</button></div>
       </div>
     </div>
   </div>
 
+  <section class="rack lb" id="lb" aria-live="polite">
+    <div class="lbhead"><h2><span id="lbTitle">今日排行榜</span><span class="day" id="lbDay"></span></h2><button class="btn" id="lbRefresh" type="button">重新整理</button></div>
+    <ol id="lbList"></ol>
+    <p class="note" id="lbNote"></p>
+  </section>
+
   <section class="rules">
     <h2>怎麼玩</h2>
     <ul>
+      <li>每日一題：同一天、同一個大小，大家拿到一樣的題目。轉越少下排越前面，一樣的話比時間。每天只算第一次過關，用了提示不能上榜。</li>
       <li>點一下格子：順時針轉 90°。</li>
       <li>右鍵或長按：鎖定格子（確定方向的先鎖起來，就不會誤點）。</li>
       <li>綠色代表已經接到交換器。所有伺服器都亮、而且沒有線頭露在外面就過關。</li>
@@ -124,6 +166,7 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
   </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
@@ -132,10 +175,25 @@ const rot=m=>((m<<1)|(m>>3))&15;
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
           set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
+/* ===== 排行榜設定：Supabase 的 Project URL 和 Publishable key（這兩個本來就是公開的） ===== */
+const SB_URL='https://yqgxnlbplpekpeblhvep.supabase.co';
+const SB_KEY='sb_publishable_RjvCXltlsYT8GqV7YJQ_mA_MJQNrdKP';
+const sb=(SB_URL&&SB_KEY&&window.supabase)?window.supabase.createClient(SB_URL,SB_KEY):null;
+
+/* 台灣時間的今天，例如 2026-11-02 */
+const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+/* 固定種子的亂數：同一天同一個大小，每個人都產生一樣的題目 */
+function hashStr(str){let h=1779033703^str.length;for(let k=0;k<str.length;k++){h=Math.imul(h^str.charCodeAt(k),3432918353);h=h<<13|h>>>19}return h>>>0}
+function mulberry32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let mode=ls.get('netMode','daily'), rnd=Math.random, day=today();
+let startT=null, timerId=0;
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+
 let n=ls.get('netSize',5), sol=[], cur=[], turns=[], locked=[], moves=0, hints=0, solved=false, cx=0, cy=0;
 
 /* 產生題目：從中間的交換器長出一棵隨機樹，葉子是伺服器 */
-function generate(){
+function generate(retry){
+  if(!retry){ day=today(); rnd=mode==='daily'?mulberry32(hashStr('net-'+day+'-'+n)):Math.random; }
   const T=n*n; sol=new Array(T).fill(0);
   cx=Math.floor(n/2); cy=Math.floor(n/2);
   const inT=new Array(T).fill(false); inT[cy*n+cx]=true;
@@ -149,18 +207,18 @@ function generate(){
     // 偏好不要長出十字路口
     let cand=frontier.filter(f=>deg[f[0]]<3);
     if(!cand.length)cand=frontier;
-    const [i,j,b,o]=cand[Math.floor(Math.random()*cand.length)];
+    const [i,j,b,o]=cand[Math.floor(rnd()*cand.length)];
     sol[i]|=b; sol[j]|=o; deg[i]++; deg[j]++; inT[j]=true; count++; addF(j);
   }
   cur=sol.slice(); turns=new Array(T).fill(0); locked=new Array(T).fill(false);
   for(let i=0;i<T;i++){
-    let r=Math.floor(Math.random()*4);
+    let r=Math.floor(rnd()*4);
     const m=sol[i]; if(m===5||m===10) r=r%2||1; // 直線轉 180° 等於沒轉
     for(let k=0;k<r;k++)cur[i]=rot(cur[i]);
     turns[i]=r;
   }
-  if(isSolved())return generate();
-  moves=0;hints=0;solved=false;
+  if(isSolved())return generate(true);
+  moves=0;hints=0;solved=false;startT=null;clearInterval(timerId);$('sTime').textContent='0:00';
 }
 
 /* 從交換器開始找接得上的格子 */
@@ -204,8 +262,12 @@ function build(){
     shown[i]=turns[i]*90;
     t.firstChild.style.transform=`rotate(${shown[i]}deg)`;
   }
+  if(lastWin&&!$('autoLine').hidden&&!$('renameBtn').hidden){clearInterval(autoTimer);const nm=ls.get('netName','');if(nm)doSubmit(nm)}
   $('win').hidden=true; b.parentElement.classList.remove('done');
   document.querySelectorAll('#sizes button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===n));
+  document.querySelectorAll('#modes button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===mode));
+  $('newBtn').hidden=mode==='daily';
+  loadBoard();
   $('sBest').textContent=ls.get('netBest'+n,null)??'—';
   refresh();
 }
@@ -221,18 +283,41 @@ function refresh(){
 }
 function turn(i){
   if(solved||locked[i])return;
+  if(startT===null){startT=Date.now();timerId=setInterval(()=>{$('sTime').textContent=fmt(elapsed())},1000)}
   cur[i]=rot(cur[i]); turns[i]=(turns[i]+1)%4; moves++;
   shown[i]+=90; $('board').children[i].firstChild.style.transform=`rotate(${shown[i]}deg)`;
   refresh();
 }
 function toggleLock(i){ if(solved)return; locked[i]=!locked[i]; refresh(); }
+function elapsed(){return startT===null?0:Math.round((Date.now()-startT)/1000)}
+let lastWin=null;
 function win(){
   solved=true; $('board').parentElement.classList.add('done');
+  clearInterval(timerId); const secs=elapsed(); $('sTime').textContent=fmt(secs);
   const key='netBest'+n, best=ls.get(key,null);
-  let msg=`${n}×${n} · 轉了 ${moves} 下`+(hints?` · 用了 ${hints} 次提示`:'');
-  if(!hints&&(best===null||moves<best)){ls.set(key,moves);msg+=' · 新紀錄！';$('sBest').textContent=moves}
+  let msg=`${n}×${n} · 轉了 ${moves} 下 · ${fmt(secs)}`+(hints?` · 用了 ${hints} 次提示`:'');
+  if(!hints&&(best===null||moves<best)){ls.set(key,moves);msg+=' · 個人新紀錄！';$('sBest').textContent=moves}
+  // 每日一題：每天每個大小只算第一次過關
+  $('submitForm').hidden=true; $('submitMsg').textContent=''; $('autoLine').hidden=true; $('toLbBtn').hidden=mode!=='daily';
+  $('againBtn').textContent=mode==='daily'?'換自由練習':'下一題';
+  if(mode==='daily'){
+    const dk='netDaily-'+day+'-'+n, prev=ls.get(dk,null);
+    if(prev) msg+=' · 今天這題已經完成過，排行榜只算第一次';
+    else{
+      ls.set(dk,{moves,seconds:secs,hints});
+      if(hints) msg+=' · 用了提示，這次不能上排行榜';
+      else if(sb){
+        lastWin={moves,seconds:secs,dk};
+        const saved=ls.get('netName','');
+        if(saved) startAuto(saved);
+        else { $('submitForm').hidden=false; $('nameIn').value=''; }
+      }
+    }
+  }
   try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:'win-'+n+'x'+n,title:'過關 '+n+'×'+n,event:true})}catch(e){}
-  $('winText').textContent=msg; $('win').hidden=false; $('againBtn').focus({preventScroll:true});
+  $('winText').textContent=msg; $('win').hidden=false;
+  ($('submitForm').hidden?$('againBtn'):$('nameIn')).focus({preventScroll:true});
+  if(!$('autoLine').hidden)$('renameBtn').focus({preventScroll:true});
   locked.fill(false); [...$('board').children].forEach(t=>t.classList.remove('locked'));
 }
 function hint(){
@@ -271,10 +356,85 @@ document.addEventListener('keydown',e=>{
 
 $('sizes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;n=+b.dataset.n;ls.set('netSize',n);generate();build()});
 $('newBtn').addEventListener('click',()=>{generate();build()});
-$('againBtn').addEventListener('click',()=>{generate();build()});
+$('againBtn').addEventListener('click',()=>{if(mode==='daily'){mode='free';ls.set('netMode',mode)}generate();build()});
+$('modes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;mode=b.dataset.m;ls.set('netMode',mode);generate();build()});
+$('toLbBtn').addEventListener('click',()=>$('lb').scrollIntoView({behavior:'smooth',block:'start'}));
+$('lbRefresh').addEventListener('click',loadBoard);
+
+/* ===== 排行榜 ===== */
+let myIds=ls.get('netMyIds',[]);
+async function loadBoard(){
+  const d=today(), size=n;
+  $('lbTitle').textContent=`今日排行榜 · ${size}×${size}`; $('lbDay').textContent=d;
+  const list=$('lbList'), note=$('lbNote');
+  if(!sb){list.innerHTML='';note.textContent='排行榜還沒連上資料庫。';return}
+  note.textContent='讀取中…';
+  const {data,error}=await sb.from('scores').select('id,name,moves,seconds')
+    .eq('day',d).eq('size',size).order('moves').order('seconds').order('created_at').limit(10);
+  if(size!==n)return; // 讀取途中換了大小
+  if(error){list.innerHTML='';note.textContent='排行榜暫時讀不到，等一下再按重新整理。';return}
+  list.innerHTML='';
+  data.forEach((r,k)=>{
+    const li=document.createElement('li'); if(myIds.includes(r.id))li.className='me';
+    const rk=document.createElement('span');rk.className='rk';rk.textContent=k+1;
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=r.name;
+    const sc=document.createElement('span');sc.className='sc';sc.textContent=`${r.moves} 下 · ${fmt(r.seconds)}`;
+    li.append(rk,nm,sc); list.appendChild(li);
+  });
+  note.textContent=data.length?(mode==='daily'?'':'切到「每日一題」才能上榜。'):'今天還沒有人上榜，搶第一！';
+}
+async function doSubmit(name){
+  if(!lastWin||!sb)return false;
+  const {data,error}=await sb.from('scores').insert({day,size:n,name,moves:lastWin.moves,seconds:lastWin.seconds}).select('id').single();
+  if(error)return false;
+  ls.set('netName',name); myIds.push(data.id); myIds=myIds.slice(-50); ls.set('netMyIds',myIds);
+  const st=ls.get(lastWin.dk,{}); st.submitted=true; ls.set(lastWin.dk,st); lastWin=null;
+  loadBoard(); return true;
+}
+/* 有記住名字：倒數 3 秒自動上榜，想換名字可以按「改名字」 */
+let autoTimer=0;
+function startAuto(name){
+  let left=3; const line=$('autoLine'); line.hidden=false; $('renameBtn').hidden=false;
+  const show=()=>{$('autoText').textContent=`${left} 秒後以「${name}」登上排行榜`};
+  show(); clearInterval(autoTimer);
+  autoTimer=setInterval(async()=>{
+    left--; if(left>0){show();return}
+    clearInterval(autoTimer); $('renameBtn').hidden=true; $('autoText').textContent='送出中…';
+    const ok=await doSubmit(name);
+    if(ok){$('autoText').textContent=`已用「${name}」登上排行榜！`}
+    else{line.hidden=true;$('submitForm').hidden=false;$('nameIn').value=name;$('submitMsg').textContent='自動送出失敗，檢查網路後按送出再試一次。'}
+  },1000);
+}
+$('renameBtn').addEventListener('click',()=>{
+  clearInterval(autoTimer); $('autoLine').hidden=true;
+  $('submitForm').hidden=false; $('nameIn').value=ls.get('netName',''); $('nameIn').focus(); $('nameIn').select();
+});
+$('submitForm').addEventListener('submit',async e=>{
+  e.preventDefault(); if(!lastWin||!sb)return;
+  const name=$('nameIn').value.trim().slice(0,12);
+  if(!name){$('submitMsg').textContent='請先輸入暱稱。';return}
+  $('submitBtn').disabled=true; $('submitMsg').textContent='送出中…';
+  const ok=await doSubmit(name);
+  $('submitBtn').disabled=false;
+  if(!ok){$('submitMsg').textContent='送出失敗，檢查網路後再按一次送出。';return}
+  $('submitForm').hidden=true; $('winText').textContent+=' · 已登上排行榜！';
+});
+
+/* ===== 在線人數 ===== */
+if(sb){
+  try{
+    const me=Math.random().toString(36).slice(2);
+    const ch=sb.channel('online-net-puzzle',{config:{presence:{key:me}}});
+    ch.on('presence',{event:'sync'},()=>{const c=Object.keys(ch.presenceState()).length;$('sOnline').textContent=c;$('onlineWrap').hidden=c<1})
+      .subscribe(async st=>{if(st==='SUBSCRIBED')await ch.track({at:Date.now()})});
+  }catch(e){}
+}
+// 跨過午夜時，每日一題自動換成新的一天
+setInterval(()=>{if(today()!==day&&mode==='daily'&&!startT){generate();build()}},60000);
 $('hintBtn').addEventListener('click',hint);
 
 if(![5,6,7,9].includes(n))n=5;
+if(!['daily','free'].includes(mode))mode='daily';
 generate();build();
 })();
 </script>
