@@ -38,6 +38,7 @@ header p{margin:2px 0 0;color:var(--mute)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .btn{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:7px 14px;font:500 14px var(--sans);cursor:pointer}
 .btn:hover{border-color:var(--mute)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
 .status{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:14px;color:var(--mute)}
 .status b{font-family:var(--mono);color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
@@ -62,19 +63,28 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
 .tile .sw{fill:var(--switch)}
 .tile .swp{fill:var(--panel)}
 .done .tile{cursor:default}
-.win{position:absolute;inset:12px;display:grid;place-items:center;pointer-events:none}
+.rackbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:-2px 2px 10px;font-size:13px;color:var(--mute)}
+.clock{font-family:var(--mono);font-size:15px;color:var(--ink);background:var(--tile);border-radius:8px;padding:2px 10px}
+.clock b{font-weight:600;font-variant-numeric:tabular-nums}
+.stage{position:relative}
+.stage.veil .board{filter:blur(10px);opacity:.5;pointer-events:none}
+.cover{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center}
+.cover p{margin:0;font-size:13px;color:var(--mute);background:var(--panel);padding:2px 10px;border-radius:6px}
+.btn.go{font-size:20px;font-weight:900;letter-spacing:.2em;padding:14px 40px 14px 46px;border-radius:14px;background:var(--ink);color:var(--bg);border-color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.btn.go:hover{filter:brightness(1.05)}
+.win{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
 .win .card{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;text-align:center;
   box-shadow:0 12px 40px rgba(0,0,0,.18);display:grid;gap:6px;max-width:90%}
 .win h2{margin:0;font-size:22px}
 .win p{margin:0;color:var(--mute);font-size:14px}
-.win .btn{justify-self:center;margin-top:6px;background:var(--live);color:var(--panel);border-color:var(--live);font-weight:700}
+.win .btn{justify-self:center;margin-top:6px;background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
 .lb{display:grid;gap:10px}
 .lbhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .lbhead h2{margin:0;font-size:17px}
 .lbhead .day{font-family:var(--mono);font-size:12px;color:var(--mute);margin-left:6px;font-weight:500}
 .lb ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .lb li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 10px;border-radius:8px;background:var(--tile)}
-.lb li.me{box-shadow:inset 0 0 0 2px var(--live)}
+.lb li.me{box-shadow:inset 0 0 0 2px var(--lock)}
 .lb .rk{font-family:var(--mono);font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
 .lb li:nth-child(1) .rk{color:var(--switch)}
 .lb .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -85,7 +95,7 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
 .submit .row{display:flex;gap:6px}
 .submit input{flex:1;min-width:0;font:500 15px var(--sans);padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .submit input:focus-visible{outline:3px solid var(--lock);outline-offset:1px}
-.submit .btn{margin:0;background:var(--live);color:var(--panel);border-color:var(--live);font-weight:700}
+.submit .btn{margin:0;background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
 .submit .msg{margin:0;font-size:13px;color:var(--mute)}
 .win .auto{margin:2px 0 0;font-size:14px;color:var(--ink)}
 .win .link{appearance:none;border:0;background:none;padding:0;font:inherit;color:var(--lock);text-decoration:underline;cursor:pointer}
@@ -123,18 +133,22 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
   <div class="status" aria-live="polite">
     <span>連線中 <b id="sOn">0</b> / <b id="sAll">0</b> 台</span>
     <span>轉了 <b id="sMoves">0</b> 下</span>
-    <span>時間 <b id="sTime">0:00</b></span>
     <span>提示 <b id="sHints">0</b></span>
     <span>這個大小最佳 <b id="sBest">—</b></span>
     <span id="onlineWrap" hidden>● 目前 <b id="sOnline">1</b> 人在線</span>
-    <span id="playsWrap" hidden>網站被打開 <b id="sPlays">0</b> 次</span>
   </div>
 
   <div class="rack">
+    <div class="rackbar"><span id="modeLbl">每日一題</span><span class="clock" aria-label="計時">⏱ <b id="sTime">0:00</b></span></div>
+    <div class="stage">
     <div class="board" id="board"></div>
+    <div class="cover" id="startCover" hidden>
+      <button class="btn go" id="startBtn" type="button">開始</button>
+      <p>按下開始才會出現題目，同時開始計時</p>
+    </div>
     <div class="win" id="win" hidden>
       <div class="card">
-        <h2>全部連線 ✓</h2>
+        <h2 id="winTitle">全部連線 ✓</h2>
         <p id="winText"></p>
         <p class="auto" id="autoLine" hidden><span id="autoText"></span> <button class="link" id="renameBtn" type="button">改名字</button></p>
         <form class="submit" id="submitForm" hidden>
@@ -144,6 +158,7 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
         </form>
         <div class="btns"><button class="btn" id="againBtn" type="button">下一題</button><button class="btn alt" id="toLbBtn" type="button" hidden>看排行榜</button></div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -156,7 +171,7 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
   <section class="rules">
     <h2>怎麼玩</h2>
     <ul>
-      <li>每日一題：同一天、同一個大小，大家拿到一樣的題目。轉越少下排越前面，一樣的話比時間。每天只算第一次過關，用了提示不能上榜。</li>
+      <li>每日一題：同一天、同一個大小，大家拿到一樣的題目。轉越少下排越前面，一樣的話比時間。每天每個大小只能玩一次，過關後就會鎖住；用了提示不能上榜。</li>
       <li>點一下格子：順時針轉 90°。</li>
       <li>右鍵或長按：鎖定格子（確定方向的先鎖起來，就不會誤點）。</li>
       <li>綠色代表已經接到交換器。所有伺服器都亮、而且沒有線頭露在外面就過關。</li>
@@ -186,7 +201,7 @@ const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'nu
 function hashStr(str){let h=1779033703^str.length;for(let k=0;k<str.length;k++){h=Math.imul(h^str.charCodeAt(k),3432918353);h=h<<13|h>>>19}return h>>>0}
 function mulberry32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 let mode=ls.get('netMode','daily'), rnd=Math.random, day=today();
-let startT=null, timerId=0;
+let startT=null, timerId=0, started=true;
 const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 
 let n=ls.get('netSize',5), sol=[], cur=[], turns=[], locked=[], moves=0, hints=0, solved=false, cx=0, cy=0;
@@ -252,7 +267,14 @@ function svgFor(i){
 }
 // 每格要轉回正確方向還差幾下；畫面角度 = -(差的步數) × 90°
 let shown=[];
+function dailyRecord(){return mode==='daily'?ls.get('netDaily-'+day+'-'+n,null):null}
 function build(){
+  const rec=dailyRecord();
+  // 每日一題還沒玩：先蓋住題目，按「開始」才計時
+  started=!(mode==='daily'&&!rec);
+  $('startCover').hidden=started; $('board').parentElement.classList.toggle('veil',!started);
+  $('modeLbl').textContent=mode==='daily'?`每日一題 · ${day}`:'自由練習';
+  if(rec){ cur=sol.slice(); turns.fill(0); locked.fill(false); solved=true; }
   const b=$('board'); b.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;
   b.innerHTML=''; shown=[]; focusI=cy*n+cx;
   for(let i=0;i<n*n;i++){
@@ -270,6 +292,18 @@ function build(){
   loadBoard();
   $('sBest').textContent=ls.get('netBest'+n,null)??'—';
   refresh();
+  if(rec) showDone(rec);
+  $('hintBtn').disabled=!!rec;
+}
+/* 今天這題已經玩過：顯示答案、鎖住，不能再玩 */
+function showDone(rec){
+  $('board').parentElement.classList.add('done');
+  moves=rec.moves; $('sMoves').textContent=rec.moves; $('sTime').textContent=fmt(rec.seconds||0); $('sHints').textContent=rec.hints||0;
+  $('winTitle').textContent=`今天的 ${n}×${n} 已經完成 🔒`;
+  $('winText').textContent=`轉了 ${rec.moves} 下 · ${fmt(rec.seconds||0)}`+(rec.hints?` · 用了 ${rec.hints} 次提示`:'')+' · 明天 00:00 換新題目，也可以先挑戰其他大小';
+  $('submitForm').hidden=true; $('autoLine').hidden=true;
+  $('againBtn').textContent='換自由練習'; $('toLbBtn').hidden=false;
+  $('win').hidden=false;
 }
 function refresh(){
   const lit=powered(); let on=0,all=0;
@@ -281,9 +315,10 @@ function refresh(){
   $('sOn').textContent=on;$('sAll').textContent=all;$('sMoves').textContent=moves;$('sHints').textContent=hints;
   if(!solved&&isSolved())win();
 }
+function startTimer(){ if(startT!==null)return; startT=Date.now(); timerId=setInterval(()=>{$('sTime').textContent=fmt(elapsed())},1000); }
 function turn(i){
-  if(solved||locked[i])return;
-  if(startT===null){startT=Date.now();timerId=setInterval(()=>{$('sTime').textContent=fmt(elapsed())},1000)}
+  if(!started||solved||locked[i])return;
+  startTimer();
   cur[i]=rot(cur[i]); turns[i]=(turns[i]+1)%4; moves++;
   shown[i]+=90; $('board').children[i].firstChild.style.transform=`rotate(${shown[i]}deg)`;
   refresh();
@@ -292,7 +327,7 @@ function toggleLock(i){ if(solved)return; locked[i]=!locked[i]; refresh(); }
 function elapsed(){return startT===null?0:Math.round((Date.now()-startT)/1000)}
 let lastWin=null;
 function win(){
-  solved=true; $('board').parentElement.classList.add('done');
+  solved=true; $('board').parentElement.classList.add('done'); $('winTitle').textContent='全部連線 ✓';
   clearInterval(timerId); const secs=elapsed(); $('sTime').textContent=fmt(secs);
   const key='netBest'+n, best=ls.get(key,null);
   let msg=`${n}×${n} · 轉了 ${moves} 下 · ${fmt(secs)}`+(hints?` · 用了 ${hints} 次提示`:'');
@@ -321,7 +356,7 @@ function win(){
   locked.fill(false); [...$('board').children].forEach(t=>t.classList.remove('locked'));
 }
 function hint(){
-  if(solved)return;
+  if(solved||!started)return;
   // 找一格方向不對的（包含被鎖錯的），轉正並鎖住
   const bad=[];for(let i=0;i<n*n;i++)if(cur[i]!==sol[i])bad.push(i);
   if(!bad.length)return;
@@ -352,7 +387,11 @@ board.addEventListener('keydown',e=>{const t=e.target.closest('.tile');if(!t)ret
 board.addEventListener('focusin',e=>{const t=e.target.closest('.tile');if(t&&+t.dataset.i!==focusI)focusTile(+t.dataset.i)});
 document.addEventListener('keydown',e=>{
   if(!MOVES[e.key]||e.target.closest?.('#board')||e.altKey||e.ctrlKey||e.metaKey)return;
-  if(solved)return;e.preventDefault();focusTile(focusI)});
+  if(solved)return;e.preventDefault();if(!started){$('startBtn').focus();return}focusTile(focusI)});
+$('startBtn').addEventListener('click',()=>{
+  started=true; $('startCover').hidden=true; $('board').parentElement.classList.remove('veil');
+  startTimer(); focusTile(focusI);
+});
 
 $('sizes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;n=+b.dataset.n;ls.set('netSize',n);generate();build()});
 $('newBtn').addEventListener('click',()=>{generate();build()});
@@ -441,12 +480,5 @@ generate();build();
 
 
 <script data-goatcounter="https://613chumi.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-<script>
-// 讀 GoatCounter 公開的總次數（要在 GoatCounter 設定裡開啟才讀得到）
-fetch('https://613chumi.goatcounter.com/counter/TOTAL.json')
-  .then(r=>r.ok?r.json():Promise.reject())
-  .then(d=>{document.getElementById('sPlays').textContent=d.count;document.getElementById('playsWrap').hidden=false})
-  .catch(()=>{});
-</script>
 </body>
 </html>
