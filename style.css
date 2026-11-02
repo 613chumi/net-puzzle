@@ -174,3 +174,6 @@ input.chip{cursor:pointer;color-scheme:dark}
   .tile svg,.mode{transition:none}
   .tile.pop .ic,.tile.pop .led{animation:none}
 }
+/* 狀態列裡的在線人數靠右 */
+.status{align-items:center}
+.status .right{margin-left:auto}
