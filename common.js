@@ -69,7 +69,8 @@ window.NP=(()=>{
   function countEvent(path,title){try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path,title,event:true})}catch(e){}}
 
   /* 分享：複製文字；瀏覽器不允許時改成顯示文字框讓人手動複製 */
-  const SITE=new URL('./',location.href).href;
+  // 分享出去的連結加上 openExternalBrowser=1：在 LINE 裡點開會直接跳到手機瀏覽器
+  const SITE=new URL('./',location.href).href+'?openExternalBrowser=1';
   async function copyText(text,msgEl){
     try{await navigator.clipboard.writeText(text);msgEl.textContent='已複製！快分享給朋友吧 ✨';
       clearTimeout(msgEl._t);msgEl._t=setTimeout(()=>{msgEl.textContent=''},3000)}
@@ -98,6 +99,20 @@ window.NP=(()=>{
     return k<0?null:{rank:k+1,moves:data[k].moves,seconds:data[k].seconds};
   }
 
-  nav(); online();
+  /* 從 LINE、IG、FB 等 App 裡打開時，提醒改用瀏覽器 */
+  function inAppTip(){
+    const ua=navigator.userAgent||'';
+    const isLine=/\bLine\//i.test(ua);
+    if(!(isLine||/FBAN|FBAV|Instagram|Messenger|MicroMessenger|KAKAOTALK|Threads/i.test(ua)))return;
+    try{if(sessionStorage.getItem('netTipClosed'))return}catch(e){}
+    const bar=document.createElement('div'); bar.className='inapp'; bar.setAttribute('role','note');
+    const u=new URL(location.href); u.searchParams.set('openExternalBrowser','1');
+    bar.innerHTML=`<span>📱 建議用 Chrome 或 Safari 開啟，紀錄才不會不見。${isLine?'':'點右上角「⋯」→「用瀏覽器開啟」'}</span>`+
+      (isLine?`<a class="btn c" href="${u.href}">用瀏覽器開啟</a>`:'')+`<button class="x" type="button" aria-label="關閉提醒">✕</button>`;
+    bar.querySelector('.x').onclick=()=>{bar.remove();try{sessionStorage.setItem('netTipClosed','1')}catch(e){}};
+    document.querySelector('.wrap')?.prepend(bar);
+  }
+
+  nav(); online(); inAppTip();
   return {copyText,shareText,myRank,SITE,$,ls,SIZES,today,fmt,dailyKey,doneSizes,streak,hashStr,mulberry32,sb,icon,countEvent};
 })();
