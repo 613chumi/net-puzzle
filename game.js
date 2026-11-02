@@ -1,6 +1,6 @@
 /* 機房接線：遊戲本體（每日一題、自由練習共用） */
 (()=>{
-const {$,ls,SIZES,today,fmt,dailyKey,hashStr,mulberry32,sb,countEvent}=window.NP;
+const {$,ls,SIZES,today,fmt,dailyKey,hashStr,mulberry32,sb,countEvent,copyText,shareText,myRank}=window.NP;
 const mode=document.body.dataset.page==='daily'?'daily':'free';
 const N=1,E=2,S=4,W=8, DIRS=[[N,0,-1,S],[E,1,0,W],[S,0,1,N],[W,-1,0,E]];
 const rot=m=>((m<<1)|(m>>3))&15;
@@ -162,13 +162,23 @@ function finishWin(){
     else if(sb){lastWin={moves,seconds:secs,dk,size:n,day};const saved=ls.get('netName','');
       if(saved)startAuto(saved);else{$('submitForm').hidden=false;$('nameIn').value=''}}
   }
-  setWinButtons();
+  setWinButtons(); prepShare();
   $('winText').textContent=msg; $('win').hidden=false;
   if(!$('submitForm').hidden)$('nameIn').focus({preventScroll:true});
   else if(!$('autoLine').hidden)$('renameBtn').focus({preventScroll:true});
   else $('againBtn').focus({preventScroll:true});
 }
+/* 分享成績：先把名次查好，按下去時才能馬上複製 */
+let shareInfo=null;
+async function prepShare(){
+  if(mode!=='daily')return;
+  const d=day, size=n, rec=ls.get(dailyKey(d,size),null); if(!rec)return;
+  shareInfo={day:d,size,moves:rec.moves,seconds:rec.seconds};
+  const r=await myRank(d,size);
+  if(r&&size===n&&d===day)shareInfo={day:d,size,...r};
+}
 function setWinButtons(){
+  if($('shareBtn')){$('shareBtn').hidden=mode!=='daily';$('shareMsg').textContent=''}
   const lb=$('toLbBtn'); lb.href='leaderboard.html?size='+n; lb.hidden=mode!=='daily';
   if(mode==='daily'){const nx=firstUndone(); $('againBtn').textContent=nx?`接著玩 ${nx}×${nx}`:'去自由練習';}
   else $('againBtn').textContent='下一題';
@@ -180,7 +190,7 @@ function showDone(rec){
   $('winTitle').textContent=`今天的 ${n}×${n} 已經完成 🔒`;
   $('winText').textContent=`轉了 ${rec.moves} 下 · ${fmt(rec.seconds||0)}`+(rec.hints?` · 用了 ${rec.hints} 次提示`:'')+' · 明天 00:00 換新題目';
   $('submitForm').hidden=true;$('autoLine').hidden=true;
-  setWinButtons(); $('win').hidden=false;
+  setWinButtons(); $('win').hidden=false; prepShare();
 }
 
 /* ---------- 上排行榜 ---------- */
@@ -192,7 +202,7 @@ async function doSubmit(name){
   if(error)return false;
   ls.set('netName',name); myIds.push(data.id); myIds=myIds.slice(-80); ls.set('netMyIds',myIds);
   const st=ls.get(w.dk,{}); st.submitted=true; ls.set(w.dk,st); if(lastWin===w)lastWin=null;
-  if(mode==='daily')loadMini(); return true;
+  if(mode==='daily'){loadMini();prepShare()} return true;
 }
 function startAuto(name){
   let left=3; $('autoLine').hidden=false; $('renameBtn').hidden=false;
@@ -255,6 +265,7 @@ document.addEventListener('keydown',e=>{
 $('startBtn').addEventListener('click',()=>{started=true;$('startCover').hidden=true;board.parentElement.classList.remove('veil');startTimer();focusTile(focusI)});
 $('sizes').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;n=+b.dataset.n;ls.set(sizeKey,n);generate();build()});
 $('hintBtn').addEventListener('click',hint);
+$('shareBtn')?.addEventListener('click',()=>copyText(shareText(shareInfo||{}),$('shareMsg')));
 $('newBtn')?.addEventListener('click',()=>{generate();build()});
 $('againBtn').addEventListener('click',()=>{
   if(mode==='daily'){const nx=firstUndone();if(!nx){location.href='practice.html';return}n=nx;ls.set(sizeKey,n)}

@@ -68,6 +68,36 @@ window.NP=(()=>{
   /* 統計過關次數（GoatCounter） */
   function countEvent(path,title){try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path,title,event:true})}catch(e){}}
 
+  /* 分享：複製文字；瀏覽器不允許時改成顯示文字框讓人手動複製 */
+  const SITE=new URL('./',location.href).href;
+  async function copyText(text,msgEl){
+    try{await navigator.clipboard.writeText(text);msgEl.textContent='已複製！快分享給朋友吧 ✨';
+      clearTimeout(msgEl._t);msgEl._t=setTimeout(()=>{msgEl.textContent=''},3000)}
+    catch(e){msgEl.innerHTML='';const t=document.createElement('textarea');t.value=text;t.readOnly=true;t.rows=3;
+      t.style.cssText='width:100%;margin-top:4px;font:13px var(--sans);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px';
+      msgEl.append('複製失敗，請手動複製：',t);t.select()}
+  }
+  const md=d=>d.slice(5).replace('-','/');
+  /* 分享文字：有名次或成績就帶上，沒有就用一般邀請 */
+  function shareText({day,size,rank,moves,seconds}={}){
+    if(moves!=null){
+      const when=day===today()?'今天':md(day)+' ';
+      const what=rank?`${size}×${size} 拿第 ${rank} 名！`:`完成了每日一題 ${size}×${size}！`;
+      return `我${when}在「機房接線」${what}${moves} 下 · ${fmt(seconds||0)} 😎\n來挑戰我：${SITE}`;
+    }
+    return `來玩機房接線！每天都有新題目，看你能不能打敗我 🔌\n${SITE}`;
+  }
+  /* 查自己在某天某大小的名次（找不到回傳 null） */
+  async function myRank(day,size){
+    if(!sb)return null;
+    const ids=ls.get('netMyIds',[]);
+    const {data,error}=await sb.from('scores').select('id,moves,seconds').eq('day',day).eq('size',size)
+      .order('moves').order('seconds').order('created_at').limit(1000);
+    if(error)return null;
+    const k=data.findIndex(r=>ids.includes(r.id));
+    return k<0?null:{rank:k+1,moves:data[k].moves,seconds:data[k].seconds};
+  }
+
   nav(); online();
-  return {$,ls,SIZES,today,fmt,dailyKey,doneSizes,streak,hashStr,mulberry32,sb,icon,countEvent};
+  return {copyText,shareText,myRank,SITE,$,ls,SIZES,today,fmt,dailyKey,doneSizes,streak,hashStr,mulberry32,sb,icon,countEvent};
 })();
