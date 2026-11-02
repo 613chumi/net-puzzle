@@ -183,3 +183,10 @@ input.chip{cursor:pointer;color-scheme:dark}
 .inapp span{flex:1;min-width:0}
 .inapp .btn{padding:5px 12px;font-size:13px;--c:var(--amber)}
 .inapp .x{appearance:none;border:0;background:none;color:var(--mute);cursor:pointer;font-size:15px;padding:2px 4px}
+/* 第一次玩：開始前取暱稱 */
+.nick{display:grid;gap:6px;width:min(280px,82vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.nick label{font-weight:700;color:var(--ink)}
+.nick input{font:500 16px var(--sans);padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
+.nick small{font-size:12px;color:var(--mute);line-height:1.5}
+.nick .err{font-size:12px;color:var(--pink)}
+.nick .err:empty{display:none}

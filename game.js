@@ -72,7 +72,6 @@ const dailyRecord=()=>mode==='daily'?ls.get(dailyKey(day,n),null):null;
 
 function build(){
   winToken++; clearInterval(autoTimer);
-  if(lastWin&&!$('autoLine').hidden&&!$('renameBtn').hidden){const nm=ls.get('netName','');if(nm)doSubmit(nm)}
   const rec=dailyRecord();
   if(rec){cur=sol.slice();turns.fill(0);locked.fill(false);solved=true}
   started=!(mode==='daily'&&!rec);
@@ -86,6 +85,8 @@ function build(){
   }
   $('win').hidden=true; stage.classList.remove('done','anim');
   $('startCover').hidden=started; stage.classList.toggle('veil',!started);
+  // 第一次玩每日一題：開始前先取暱稱
+  if($('nickForm')){const need=mode==='daily'&&!started&&!ls.get('netName','');$('nickForm').hidden=!need;$('nickMsg').textContent=''}
   $('rackLbl').textContent=mode==='daily'?`今天的 ${n}×${n}`:`練習 ${n}×${n}`;
   sizeChips();
   if($('sBest'))$('sBest').textContent=ls.get('netBest'+n,null)??'—';
@@ -165,7 +166,6 @@ function finishWin(){
   setWinButtons(); prepShare();
   $('winText').textContent=msg; $('win').hidden=false;
   if(!$('submitForm').hidden)$('nameIn').focus({preventScroll:true});
-  else if(!$('autoLine').hidden)$('renameBtn').focus({preventScroll:true});
   else $('againBtn').focus({preventScroll:true});
 }
 /* 分享成績：先把名次查好，按下去時才能馬上複製 */
@@ -204,18 +204,12 @@ async function doSubmit(name){
   const st=ls.get(w.dk,{}); st.submitted=true; ls.set(w.dk,st); if(lastWin===w)lastWin=null;
   if(mode==='daily'){loadMini();prepShare()} return true;
 }
-function startAuto(name){
-  let left=3; $('autoLine').hidden=false; $('renameBtn').hidden=false;
-  const show=()=>{$('autoText').textContent=`${left} 秒後以「${name}」登上排行榜`};
-  show(); clearInterval(autoTimer);
-  autoTimer=setInterval(async()=>{
-    left--; if(left>0){show();return}
-    clearInterval(autoTimer); $('renameBtn').hidden=true; $('autoText').textContent='送出中…';
-    if(await doSubmit(name))$('autoText').textContent=`已用「${name}」登上排行榜！`;
-    else{$('autoLine').hidden=true;$('submitForm').hidden=false;$('nameIn').value=name;$('submitMsg').textContent='自動送出失敗，檢查網路後按送出再試一次。'}
-  },1000);
+/* 有記住暱稱：過關直接上榜（想改名字到排行榜頁） */
+async function startAuto(name){
+  $('autoLine').hidden=false; $('autoText').textContent=`以「${name}」登上排行榜中…`;
+  if(await doSubmit(name)) $('autoText').innerHTML=`已用「<b></b>」登上排行榜！<br><small>想改暱稱可以到排行榜頁修改</small>`, $('autoText').querySelector('b').textContent=name;
+  else{$('autoLine').hidden=true;$('submitForm').hidden=false;$('nameIn').value=name;$('submitMsg').textContent='自動送出失敗，檢查網路後按送出再試一次。'}
 }
-$('renameBtn').addEventListener('click',()=>{clearInterval(autoTimer);$('autoLine').hidden=true;$('submitForm').hidden=false;$('nameIn').value=ls.get('netName','');$('nameIn').focus();$('nameIn').select()});
 $('submitForm').addEventListener('submit',async e=>{
   e.preventDefault(); if(!lastWin||!sb)return;
   const name=$('nameIn').value.trim().slice(0,12);
@@ -262,7 +256,16 @@ document.addEventListener('keydown',e=>{
   if(!MOVES[e.key]||e.target.closest?.('#board,input')||e.altKey||e.ctrlKey||e.metaKey||solved)return;
   e.preventDefault(); if(!started){$('startBtn').focus();return} focusTile(focusI)});
 
-$('startBtn').addEventListener('click',()=>{started=true;$('startCover').hidden=true;board.parentElement.classList.remove('veil');startTimer();focusTile(focusI)});
+function startGame(){
+  if($('nickForm')&&!$('nickForm').hidden){
+    const nm=$('nickIn').value.trim().slice(0,12);
+    if(!nm){$('nickMsg').textContent='請先輸入暱稱，才能上排行榜喔';$('nickIn').focus();return}
+    ls.set('netName',nm); $('nickForm').hidden=true;
+  }
+  started=true;$('startCover').hidden=true;board.parentElement.classList.remove('veil');startTimer();focusTile(focusI);
+}
+$('startBtn').addEventListener('click',startGame);
+$('nickForm')?.addEventListener('submit',e=>{e.preventDefault();startGame()});
 $('sizes').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;n=+b.dataset.n;ls.set(sizeKey,n);generate();build()});
 $('hintBtn').addEventListener('click',hint);
 $('shareBtn')?.addEventListener('click',()=>copyText(shareText(shareInfo||{}),$('shareMsg')));

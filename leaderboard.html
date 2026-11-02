@@ -6,7 +6,7 @@
 <title>排行榜 · 機房接線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=11021138">
+<link rel="stylesheet" href="style.css?v=11021154">
 </head>
 <body data-page="board">
 <main class="wrap">
@@ -20,6 +20,15 @@
 <div class="podium" id="podium"></div>
 <ol class="list" id="list" start="4"></ol>
 <p class="empty" id="note"></p>
+<section class="card" aria-labelledby="meT">
+  <div class="row"><h3 id="meT">👤 我的暱稱</h3><button class="btn" id="renameBtn" type="button">✏️ 改名字</button></div>
+  <span id="myName"></span>
+  <form class="submit" id="renameForm" hidden>
+    <label for="nameIn">新的暱稱（最多 12 個字）</label>
+    <div class="row"><input id="nameIn" maxlength="12" autocomplete="nickname" required><button class="btn c" type="submit">儲存</button><button class="btn" id="cancelRename" type="button">取消</button></div>
+    <p class="msg">新暱稱會用在之後的成績，已經上榜的成績不會改。</p>
+  </form>
+</section>
 <div class="tools" style="justify-content:center">
   <button class="btn" id="refresh" type="button">↻ 重新整理</button>
   <button class="btn c" id="share" type="button">🔗 分享給朋友</button>
@@ -27,7 +36,7 @@
 <p class="sub" id="shareMsg" style="text-align:center" aria-live="polite"></p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
-<script src="common.js?v=11021138"></script>
+<script src="common.js?v=11021154"></script>
 <script>
 (()=>{
 const {$,SIZES,today,fmt,ls,sb}=NP;
@@ -70,6 +79,15 @@ $('sizes').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)
 $('days').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;d=today(+b.dataset.d);load()});
 $('dateIn').addEventListener('change',e=>{if(e.target.value){d=e.target.value;load()}});
 $('refresh').addEventListener('click',load);
+// 我的暱稱：存在這台裝置的瀏覽器裡，過關時自動用它上榜
+function showName(){const nm=ls.get('netName','');
+  $('myName').textContent=nm?`目前用「${nm}」上榜，過關後會自動送出成績。`:'還沒設定，第一次上榜時會請你輸入，也可以先在這裡設定。';
+  $('renameBtn').textContent=nm?'✏️ 改名字':'✏️ 設定暱稱'}
+$('renameBtn').addEventListener('click',()=>{$('renameForm').hidden=false;$('renameBtn').hidden=true;$('nameIn').value=ls.get('netName','');$('nameIn').focus();$('nameIn').select()});
+$('cancelRename').addEventListener('click',()=>{$('renameForm').hidden=true;$('renameBtn').hidden=false});
+$('renameForm').addEventListener('submit',e=>{e.preventDefault();const nm=$('nameIn').value.trim().slice(0,12);if(!nm)return;
+  ls.set('netName',nm);$('renameForm').hidden=true;$('renameBtn').hidden=false;showName();$('myName').textContent+=' ✓ 已儲存';});
+showName();
 // 分享：自己在目前這個榜上有名次就帶上成績，沒有就用一般邀請
 $('share').addEventListener('click',()=>NP.copyText(NP.shareText(mine||{}),$('shareMsg')));
 load();
