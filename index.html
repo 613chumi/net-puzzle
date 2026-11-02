@@ -6,479 +6,54 @@
 <title>機房接線</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<style>
-/* 版面：上面工具列＋狀態，中間正方形機櫃面板，下面規則。像機房的配線架。 */
-:root{
-  --bg:#e7eaee; --panel:#f6f7f9; --ink:#1d242c; --mute:#5f6a76; --line:#cdd3da;
-  --tile:#dfe4ea; --wire:#9aa4b0; --live:#1f8a55; --live-glow:rgba(31,138,85,.18);
-  --switch:#c7811c; --lock:#3a5a8c; --hl:rgba(58,90,140,.12);
-  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#12161b; --panel:#1a2027; --ink:#e3e8ee; --mute:#94a0ad; --line:#2c343e;
-  --tile:#212831; --wire:#55606c; --live:#4fd88f; --live-glow:rgba(79,216,143,.16);
-  --switch:#f0a943; --lock:#8fb3ea; --hl:rgba(143,179,234,.14); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#12161b; --panel:#1a2027; --ink:#e3e8ee; --mute:#94a0ad; --line:#2c343e;
-  --tile:#212831; --wire:#55606c; --live:#4fd88f; --live-glow:rgba(79,216,143,.16);
-  --switch:#f0a943; --lock:#8fb3ea; --hl:rgba(143,179,234,.14); color-scheme:dark}
-[hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6}
-.wrap{max-width:620px;margin:0 auto;padding-block:28px 56px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  display:grid;gap:16px}
-header .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--mute)}
-header h1{margin:0;font-size:clamp(28px,6vw,38px);font-weight:900;letter-spacing:.06em;text-wrap:balance}
-header p{margin:2px 0 0;color:var(--mute)}
-.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.seg button{appearance:none;border:0;background:var(--panel);color:var(--mute);font:600 13px var(--mono);padding:7px 11px;cursor:pointer}
-.seg button+button{border-left:1px solid var(--line)}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.btn{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:7px 14px;font:500 14px var(--sans);cursor:pointer}
-.btn:hover{border-color:var(--mute)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
-.status{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:14px;color:var(--mute)}
-.status b{font-family:var(--mono);color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-.rack{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;position:relative}
-.board{display:grid;gap:3px;width:100%;aspect-ratio:1;max-width:100%}
-.tile{appearance:none;border:0;padding:0;margin:0;background:var(--tile);border-radius:6px;cursor:pointer;position:relative;min-width:0;
-  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.tile:hover{box-shadow:inset 0 0 0 2px var(--line)}
-.tile.locked{background:var(--hl);box-shadow:inset 0 0 0 2px var(--lock)}
-.tile.lit{background:color-mix(in srgb,var(--tile) 82%,var(--live) 18%)}
-.tile.locked.lit{background:color-mix(in srgb,var(--hl) 70%,var(--live) 18%)}
-.tile svg{position:absolute;inset:0;width:100%;height:100%;transition:transform .16s ease-out}
-.tile svg.ic{transition:none}
-.tile .w{stroke:var(--wire);stroke-width:13;stroke-linecap:round;fill:none}
-.tile.lit .w{stroke:var(--live)}
-.tile .hub{fill:var(--wire)}
-.tile.lit .hub{fill:var(--live)}
-.tile .srv{fill:var(--panel);stroke:var(--wire);stroke-width:5}
-.tile.lit .srv{stroke:var(--live)}
-.tile .led{fill:var(--wire)}
-.tile.lit .led{fill:var(--live)}
-.tile .sw{fill:var(--switch)}
-.tile .swp{fill:var(--panel)}
-.done .tile{cursor:default}
-.rackbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:-2px 2px 10px;font-size:13px;color:var(--mute)}
-.clock{font-family:var(--mono);font-size:15px;color:var(--ink);background:var(--tile);border-radius:8px;padding:2px 10px}
-.clock b{font-weight:600;font-variant-numeric:tabular-nums}
-.stage{position:relative}
-.stage.veil .board{filter:blur(10px);opacity:.5;pointer-events:none}
-.cover{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center}
-.cover p{margin:0;font-size:13px;color:var(--mute);background:var(--panel);padding:2px 10px;border-radius:6px}
-.btn.go{font-size:20px;font-weight:900;letter-spacing:.2em;padding:14px 40px 14px 46px;border-radius:14px;background:var(--ink);color:var(--bg);border-color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.18)}
-.btn.go:hover{filter:brightness(1.05)}
-.win{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
-.win .card{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;text-align:center;
-  box-shadow:0 12px 40px rgba(0,0,0,.18);display:grid;gap:6px;max-width:90%}
-.win h2{margin:0;font-size:22px}
-.win p{margin:0;color:var(--mute);font-size:14px}
-.win .btn{justify-self:center;margin-top:6px;background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
-.lb{display:grid;gap:10px}
-.lbhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.lbhead h2{margin:0;font-size:17px}
-.lbhead .day{font-family:var(--mono);font-size:12px;color:var(--mute);margin-left:6px;font-weight:500}
-.lb ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
-.lb li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 10px;border-radius:8px;background:var(--tile)}
-.lb li.me{box-shadow:inset 0 0 0 2px var(--lock)}
-.lb .rk{font-family:var(--mono);font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
-.lb li:nth-child(1) .rk{color:var(--switch)}
-.lb .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lb .sc{font-family:var(--mono);font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
-.lb .note{margin:0;font-size:13px;color:var(--mute)}
-.submit{display:grid;gap:6px;text-align:left;margin-top:4px}
-.submit label{font-size:13px;color:var(--mute)}
-.submit .row{display:flex;gap:6px}
-.submit input{flex:1;min-width:0;font:500 15px var(--sans);padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
-.submit input:focus-visible{outline:3px solid var(--lock);outline-offset:1px}
-.submit .btn{margin:0;background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
-.submit .msg{margin:0;font-size:13px;color:var(--mute)}
-.win .auto{margin:2px 0 0;font-size:14px;color:var(--ink)}
-.win .link{appearance:none;border:0;background:none;padding:0;font:inherit;color:var(--lock);text-decoration:underline;cursor:pointer}
-.win .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.win .btns .btn{margin-top:6px}
-.win .btn.alt{background:var(--panel);color:var(--ink);border-color:var(--line);font-weight:500}
-.rules{font-size:14px;color:var(--mute);display:grid;gap:4px}
-.rules h2{font-size:15px;color:var(--ink);margin:0 0 2px}
-.rules ul{margin:0;padding-left:18px;display:grid;gap:2px}
-.kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 5px}
-@media (prefers-reduced-motion: reduce){.tile svg{transition:none}}
-</style>
-<style>body{margin:0}</style>
+<link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-<div class="wrap">
-  <header>
-    <div class="eyebrow">RACK A · PATCH PANEL</div>
-    <h1>機房接線</h1>
-    <p>轉動每一格網路線，讓中間的交換器接到所有伺服器。</p>
-  </header>
-
-  <div class="tools">
-    <div class="seg" id="modes" role="group" aria-label="模式">
-      <button type="button" data-m="daily">每日一題</button><button type="button" data-m="free">自由練習</button>
-    </div>
-    <div class="seg" id="sizes" role="group" aria-label="大小">
-      <button type="button" data-n="5">5×5</button><button type="button" data-n="6">6×6</button><button type="button" data-n="7">7×7</button><button type="button" data-n="9">9×9</button>
-    </div>
-    <button class="btn" id="newBtn" type="button">新題目</button>
-    <button class="btn" id="hintBtn" type="button">提示</button>
-  </div>
-
-  <div class="status" aria-live="polite">
-    <span>連線中 <b id="sOn">0</b> / <b id="sAll">0</b> 台</span>
-    <span>轉了 <b id="sMoves">0</b> 下</span>
-    <span>提示 <b id="sHints">0</b></span>
-    <span>這個大小最佳 <b id="sBest">—</b></span>
-    <span id="onlineWrap" hidden>● 目前 <b id="sOnline">1</b> 人在線</span>
-  </div>
-
-  <div class="rack">
-    <div class="rackbar"><span id="modeLbl">每日一題</span><span class="clock" aria-label="計時">⏱ <b id="sTime">0:00</b></span></div>
-    <div class="stage">
-    <div class="board" id="board"></div>
-    <div class="cover" id="startCover" hidden>
-      <button class="btn go" id="startBtn" type="button">開始</button>
-      <p>按下開始才會出現題目，同時開始計時</p>
-    </div>
-    <div class="win" id="win" hidden>
-      <div class="card">
-        <h2 id="winTitle">全部連線 ✓</h2>
-        <p id="winText"></p>
-        <p class="auto" id="autoLine" hidden><span id="autoText"></span> <button class="link" id="renameBtn" type="button">改名字</button></p>
-        <form class="submit" id="submitForm" hidden>
-          <label for="nameIn">留下名字，登上今日排行榜</label>
-          <div class="row"><input id="nameIn" maxlength="12" autocomplete="nickname" placeholder="你的暱稱" required><button class="btn" type="submit" id="submitBtn">送出</button></div>
-          <p class="msg" id="submitMsg"></p>
-        </form>
-        <div class="btns"><button class="btn" id="againBtn" type="button">下一題</button><button class="btn alt" id="toLbBtn" type="button" hidden>看排行榜</button></div>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <section class="rack lb" id="lb" aria-live="polite">
-    <div class="lbhead"><h2><span id="lbTitle">今日排行榜</span><span class="day" id="lbDay"></span></h2><button class="btn" id="lbRefresh" type="button">重新整理</button></div>
-    <ol id="lbList"></ol>
-    <p class="note" id="lbNote"></p>
-  </section>
-
-  <section class="rules">
-    <h2>怎麼玩</h2>
-    <ul>
-      <li>每日一題：同一天、同一個大小，大家拿到一樣的題目。轉越少下排越前面，一樣的話比時間。每天每個大小只能玩一次，過關後就會鎖住；用了提示不能上榜。</li>
-      <li>點一下格子：順時針轉 90°。</li>
-      <li>右鍵或長按：鎖定格子（確定方向的先鎖起來，就不會誤點）。</li>
-      <li>綠色代表已經接到交換器。所有伺服器都亮、而且沒有線頭露在外面就過關。</li>
-      <li>小技巧：邊框上的線頭不能朝外；伺服器不能接伺服器。</li>
-      <li>鍵盤：<span class="kbd">↑↓←→</span> 移動、<span class="kbd">空白鍵</span> 或 <span class="kbd">Enter</span> 旋轉、<span class="kbd">L</span> 鎖定。</li>
-    </ul>
-  </section>
-</div>
-
+<body data-page="home">
+<main class="wrap">
+<div class="topbar"><span class="pill">RACK A · PATCH PANEL</span><span class="pill" data-online-wrap hidden><i class="dot"></i><span data-online>1</span> 人在線</span></div>
+<section class="hero">
+  <div><h1>機房接線</h1><p class="sub">轉動網路線，<br>把交換器接到每一台伺服器。</p></div>
+  <svg viewBox="0 0 130 120" aria-hidden="true">
+<rect x="22" y="4" width="70" height="104" rx="8" fill="#232b40" stroke="#3a4560" stroke-width="2"/>
+<g id="leds"></g>
+<path d="M85 22c22 0 18 30 38 30" fill="none" stroke="#ffb547" stroke-width="4" stroke-linecap="round"/>
+<path d="M85 45c18 0 16 40 34 44" fill="none" stroke="#5cc8ff" stroke-width="4" stroke-linecap="round"/>
+<path d="M85 68c14 0 12 36 26 44" fill="none" stroke="#ff7eb6" stroke-width="4" stroke-linecap="round"/>
+<path d="M8 20l3-6 3 6-6-3h6zM112 8l2-4 2 4-4-2h4z" fill="#ffe27a"/>
+</svg>
+</section>
+<section class="card" aria-labelledby="progT">
+  <h3 id="progT">📅 今日進度 · <span id="todayLbl"></span></h3>
+  <div class="prog" id="prog"></div>
+  <span id="streak"></span>
+</section>
+<nav class="modes" aria-label="模式">
+  <a class="mode" href="daily.html" style="--m:var(--amber)"><span class="ic" data-ic="cal"></span><span><b>每日一題</b><small id="dailySub">每天四題，大家同一題</small></span><span class="arr">→</span></a>
+  <a class="mode" href="practice.html" style="--m:var(--cyan)"><span class="ic" data-ic="tool"></span><span><b>自由練習</b><small>隨機出題、不計排名</small></span><span class="arr">→</span></a>
+  <a class="mode" href="leaderboard.html" style="--m:var(--pink)"><span class="ic" data-ic="cup"></span><span><b>排行榜</b><small id="lbSub">看看今天誰最強</small></span><span class="arr">→</span></a>
+  <a class="mode" href="howto.html" style="--m:var(--violet)"><span class="ic" data-ic="book"></span><span><b>玩法說明</b><small>第一次玩先看這裡</small></span><span class="arr">→</span></a>
+</nav>
+</main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
+<script src="common.js"></script>
 <script>
 (()=>{
-const $=id=>document.getElementById(id);
-const N=1,E=2,S=4,W=8, DIRS=[[N,0,-1,S],[E,1,0,W],[S,0,1,N],[W,-1,0,E]];
-const rot=m=>((m<<1)|(m>>3))&15;
-const ls={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
-          set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-
-/* ===== 排行榜設定：Supabase 的 Project URL 和 Publishable key（這兩個本來就是公開的） ===== */
-const SB_URL='https://yqgxnlbplpekpeblhvep.supabase.co';
-const SB_KEY='sb_publishable_RjvCXltlsYT8GqV7YJQ_mA_MJQNrdKP';
-const sb=(SB_URL&&SB_KEY&&window.supabase)?window.supabase.createClient(SB_URL,SB_KEY):null;
-
-/* 台灣時間的今天，例如 2026-11-02 */
-const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-/* 固定種子的亂數：同一天同一個大小，每個人都產生一樣的題目 */
-function hashStr(str){let h=1779033703^str.length;for(let k=0;k<str.length;k++){h=Math.imul(h^str.charCodeAt(k),3432918353);h=h<<13|h>>>19}return h>>>0}
-function mulberry32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-let mode=ls.get('netMode','daily'), rnd=Math.random, day=today();
-let startT=null, timerId=0, started=true;
-const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-
-let n=ls.get('netSize',5), sol=[], cur=[], turns=[], locked=[], moves=0, hints=0, solved=false, cx=0, cy=0;
-
-/* 產生題目：從中間的交換器長出一棵隨機樹，葉子是伺服器 */
-function generate(retry){
-  if(!retry){ day=today(); rnd=mode==='daily'?mulberry32(hashStr('net-'+day+'-'+n)):Math.random; }
-  const T=n*n; sol=new Array(T).fill(0);
-  cx=Math.floor(n/2); cy=Math.floor(n/2);
-  const inT=new Array(T).fill(false); inT[cy*n+cx]=true;
-  const deg=new Array(T).fill(0);
-  let frontier=[]; const addF=i=>{const x=i%n,y=(i/n)|0;
-    for(const [b,dx,dy,o] of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=n||ny>=n)continue;const j=ny*n+nx;if(!inT[j])frontier.push([i,j,b,o])}};
-  addF(cy*n+cx);
-  let count=1;
-  while(count<T){
-    frontier=frontier.filter(f=>!inT[f[1]]);
-    // 偏好不要長出十字路口
-    let cand=frontier.filter(f=>deg[f[0]]<3);
-    if(!cand.length)cand=frontier;
-    const [i,j,b,o]=cand[Math.floor(rnd()*cand.length)];
-    sol[i]|=b; sol[j]|=o; deg[i]++; deg[j]++; inT[j]=true; count++; addF(j);
-  }
-  cur=sol.slice(); turns=new Array(T).fill(0); locked=new Array(T).fill(false);
-  for(let i=0;i<T;i++){
-    let r=Math.floor(rnd()*4);
-    const m=sol[i]; if(m===5||m===10) r=r%2||1; // 直線轉 180° 等於沒轉
-    for(let k=0;k<r;k++)cur[i]=rot(cur[i]);
-    turns[i]=r;
-  }
-  if(isSolved())return generate(true);
-  moves=0;hints=0;solved=false;startT=null;clearInterval(timerId);$('sTime').textContent='0:00';
-}
-
-/* 從交換器開始找接得上的格子 */
-function powered(){
-  const lit=new Array(n*n).fill(false), st=[cy*n+cx]; lit[st[0]]=true;
-  while(st.length){const i=st.pop(),x=i%n,y=(i/n)|0;
-    for(const [b,dx,dy,o] of DIRS){if(!(cur[i]&b))continue;const nx=x+dx,ny=y+dy;
-      if(nx<0||ny<0||nx>=n||ny>=n)continue;const j=ny*n+nx;
-      if((cur[j]&o)&&!lit[j]){lit[j]=true;st.push(j)}}}
-  return lit;
-}
-function isSolved(){
-  for(let i=0;i<n*n;i++){const x=i%n,y=(i/n)|0;
-    for(const [b,dx,dy,o] of DIRS){if(!(cur[i]&b))continue;const nx=x+dx,ny=y+dy;
-      if(nx<0||ny<0||nx>=n||ny>=n)return false;if(!(cur[ny*n+nx]&o))return false}}
-  return powered().every(Boolean);
-}
-
-/* 畫格子：畫「正確方向」的形狀，再用 CSS 旋轉到目前角度 */
-function svgFor(i){
-  const m=sol[i], isSw=i===cy*n+cx, d=[(m&N)&&1,(m&E)&&1,(m&S)&&1,(m&W)&&1].reduce((a,b)=>a+b,0), leaf=d===1&&!isSw;
-  let p='';
-  const end={[N]:'50,0',[E]:'100,50',[S]:'50,100',[W]:'0,50'};
-  for(const b of [N,E,S,W]) if(m&b) p+=`<line class="w" x1="50" y1="50" x2="${end[b].split(',')[0]}" y2="${end[b].split(',')[1]}"/>`;
-  // 交換器和伺服器的圖示放在不會轉的那一層，永遠是正的
-  let icon='';
-  if(isSw) icon=`<rect class="sw" x="22" y="30" width="56" height="40" rx="6"/>`+[32,44,56,68].map(x=>`<rect class="swp" x="${x-4}" y="44" width="8" height="10" rx="1"/>`).join('');
-  else if(leaf) icon=`<rect class="srv" x="27" y="27" width="46" height="46" rx="6"/><line class="w" x1="36" y1="43" x2="54" y2="43" style="stroke-width:5"/><line class="w" x1="36" y1="57" x2="54" y2="57" style="stroke-width:5"/><circle class="led" cx="63" cy="43" r="4"/>`;
-  else if(d>=3) p+=`<circle class="hub" cx="50" cy="50" r="11"/>`;
-  return `<svg viewBox="0 0 100 100" aria-hidden="true">${p}</svg>`+(icon?`<svg class="ic" viewBox="0 0 100 100" aria-hidden="true">${icon}</svg>`:'');
-}
-// 每格要轉回正確方向還差幾下；畫面角度 = -(差的步數) × 90°
-let shown=[];
-function dailyRecord(){return mode==='daily'?ls.get('netDaily-'+day+'-'+n,null):null}
-function build(){
-  const rec=dailyRecord();
-  // 每日一題還沒玩：先蓋住題目，按「開始」才計時
-  started=!(mode==='daily'&&!rec);
-  $('startCover').hidden=started; $('board').parentElement.classList.toggle('veil',!started);
-  $('modeLbl').textContent=mode==='daily'?`每日一題 · ${day}`:'自由練習';
-  if(rec){ cur=sol.slice(); turns.fill(0); locked.fill(false); solved=true; }
-  const b=$('board'); b.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;
-  b.innerHTML=''; shown=[]; focusI=cy*n+cx;
-  for(let i=0;i<n*n;i++){
-    const t=document.createElement('button');t.type='button';t.className='tile';t.dataset.i=i;
-    t.setAttribute('aria-label',`第 ${((i/n)|0)+1} 列第 ${i%n+1} 格`);
-    t.innerHTML=svgFor(i); t.tabIndex=i===cy*n+cx?0:-1; b.appendChild(t);
-    shown[i]=turns[i]*90;
-    t.firstChild.style.transform=`rotate(${shown[i]}deg)`;
-  }
-  if(lastWin&&!$('autoLine').hidden&&!$('renameBtn').hidden){clearInterval(autoTimer);const nm=ls.get('netName','');if(nm)doSubmit(nm)}
-  $('win').hidden=true; b.parentElement.classList.remove('done');
-  document.querySelectorAll('#sizes button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.n===n));
-  document.querySelectorAll('#modes button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===mode));
-  $('newBtn').hidden=mode==='daily';
-  loadBoard();
-  $('sBest').textContent=ls.get('netBest'+n,null)??'—';
-  refresh();
-  if(rec) showDone(rec);
-  $('hintBtn').disabled=!!rec;
-}
-/* 今天這題已經玩過：顯示答案、鎖住，不能再玩 */
-function showDone(rec){
-  $('board').parentElement.classList.add('done');
-  moves=rec.moves; $('sMoves').textContent=rec.moves; $('sTime').textContent=fmt(rec.seconds||0); $('sHints').textContent=rec.hints||0;
-  $('winTitle').textContent=`今天的 ${n}×${n} 已經完成 🔒`;
-  $('winText').textContent=`轉了 ${rec.moves} 下 · ${fmt(rec.seconds||0)}`+(rec.hints?` · 用了 ${rec.hints} 次提示`:'')+' · 明天 00:00 換新題目，也可以先挑戰其他大小';
-  $('submitForm').hidden=true; $('autoLine').hidden=true;
-  $('againBtn').textContent='換自由練習'; $('toLbBtn').hidden=false;
-  $('win').hidden=false;
-}
-function refresh(){
-  const lit=powered(); let on=0,all=0;
-  [...$('board').children].forEach((t,i)=>{
-    t.classList.toggle('lit',lit[i]); t.classList.toggle('locked',locked[i]);
-    const d=[N,E,S,W].filter(b=>sol[i]&b).length;
-    if(d===1&&i!==cy*n+cx){all++;if(lit[i])on++}
-  });
-  $('sOn').textContent=on;$('sAll').textContent=all;$('sMoves').textContent=moves;$('sHints').textContent=hints;
-  if(!solved&&isSolved())win();
-}
-function startTimer(){ if(startT!==null)return; startT=Date.now(); timerId=setInterval(()=>{$('sTime').textContent=fmt(elapsed())},1000); }
-function turn(i){
-  if(!started||solved||locked[i])return;
-  startTimer();
-  cur[i]=rot(cur[i]); turns[i]=(turns[i]+1)%4; moves++;
-  shown[i]+=90; $('board').children[i].firstChild.style.transform=`rotate(${shown[i]}deg)`;
-  refresh();
-}
-function toggleLock(i){ if(solved)return; locked[i]=!locked[i]; refresh(); }
-function elapsed(){return startT===null?0:Math.round((Date.now()-startT)/1000)}
-let lastWin=null;
-function win(){
-  solved=true; $('board').parentElement.classList.add('done'); $('winTitle').textContent='全部連線 ✓';
-  clearInterval(timerId); const secs=elapsed(); $('sTime').textContent=fmt(secs);
-  const key='netBest'+n, best=ls.get(key,null);
-  let msg=`${n}×${n} · 轉了 ${moves} 下 · ${fmt(secs)}`+(hints?` · 用了 ${hints} 次提示`:'');
-  if(!hints&&(best===null||moves<best)){ls.set(key,moves);msg+=' · 個人新紀錄！';$('sBest').textContent=moves}
-  // 每日一題：每天每個大小只算第一次過關
-  $('submitForm').hidden=true; $('submitMsg').textContent=''; $('autoLine').hidden=true; $('toLbBtn').hidden=mode!=='daily';
-  $('againBtn').textContent=mode==='daily'?'換自由練習':'下一題';
-  if(mode==='daily'){
-    const dk='netDaily-'+day+'-'+n, prev=ls.get(dk,null);
-    if(prev) msg+=' · 今天這題已經完成過，排行榜只算第一次';
-    else{
-      ls.set(dk,{moves,seconds:secs,hints});
-      if(hints) msg+=' · 用了提示，這次不能上排行榜';
-      else if(sb){
-        lastWin={moves,seconds:secs,dk};
-        const saved=ls.get('netName','');
-        if(saved) startAuto(saved);
-        else { $('submitForm').hidden=false; $('nameIn').value=''; }
-      }
-    }
-  }
-  try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:'win-'+n+'x'+n,title:'過關 '+n+'×'+n,event:true})}catch(e){}
-  $('winText').textContent=msg; $('win').hidden=false;
-  ($('submitForm').hidden?$('againBtn'):$('nameIn')).focus({preventScroll:true});
-  if(!$('autoLine').hidden)$('renameBtn').focus({preventScroll:true});
-  locked.fill(false); [...$('board').children].forEach(t=>t.classList.remove('locked'));
-}
-function hint(){
-  if(solved||!started)return;
-  // 找一格方向不對的（包含被鎖錯的），轉正並鎖住
-  const bad=[];for(let i=0;i<n*n;i++)if(cur[i]!==sol[i])bad.push(i);
-  if(!bad.length)return;
-  const i=bad[Math.floor(Math.random()*bad.length)];
-  while(cur[i]!==sol[i]){cur[i]=rot(cur[i]);turns[i]=(turns[i]+1)%4;shown[i]+=90}
-  $('board').children[i].firstChild.style.transform=`rotate(${shown[i]}deg)`;
-  locked[i]=true; hints++; refresh();
-}
-
-/* 操作：點擊旋轉、右鍵／長按鎖定 */
-const board=$('board'); let press=null, skipClick=false;
-board.addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');if(!t||e.button!==0)return;
-  skipClick=false; press=setTimeout(()=>{skipClick=true;toggleLock(+t.dataset.i)},450)});
-['pointerup','pointerleave','pointercancel'].forEach(ev=>board.addEventListener(ev,()=>clearTimeout(press)));
-board.addEventListener('click',e=>{const t=e.target.closest('.tile');if(!t)return;if(skipClick){skipClick=false;return}turn(+t.dataset.i)});
-board.addEventListener('contextmenu',e=>{const t=e.target.closest('.tile');if(!t)return;e.preventDefault();clearTimeout(press);toggleLock(+t.dataset.i)});
-// 方向鍵在格子之間移動（只有目前那格可以 Tab 進來）
-let focusI=0;
-function focusTile(i){const tiles=$('board').children;if(!tiles[i])return;
-  tiles[focusI]&&(tiles[focusI].tabIndex=-1);focusI=i;tiles[i].tabIndex=0;tiles[i].focus({preventScroll:false})}
-const MOVES={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};
-board.addEventListener('keydown',e=>{const t=e.target.closest('.tile');if(!t)return;
-  const i=+t.dataset.i;
-  if(e.key==='l'||e.key==='L'){e.preventDefault();toggleLock(i);return}
-  const m=MOVES[e.key];if(!m)return;e.preventDefault();
-  const x=Math.min(n-1,Math.max(0,i%n+m[0])),y=Math.min(n-1,Math.max(0,((i/n)|0)+m[1]));
-  focusTile(y*n+x)});
-board.addEventListener('focusin',e=>{const t=e.target.closest('.tile');if(t&&+t.dataset.i!==focusI)focusTile(+t.dataset.i)});
-document.addEventListener('keydown',e=>{
-  if(!MOVES[e.key]||e.target.closest?.('#board')||e.altKey||e.ctrlKey||e.metaKey)return;
-  if(solved)return;e.preventDefault();if(!started){$('startBtn').focus();return}focusTile(focusI)});
-$('startBtn').addEventListener('click',()=>{
-  started=true; $('startCover').hidden=true; $('board').parentElement.classList.remove('veil');
-  startTimer(); focusTile(focusI);
-});
-
-$('sizes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;n=+b.dataset.n;ls.set('netSize',n);generate();build()});
-$('newBtn').addEventListener('click',()=>{generate();build()});
-$('againBtn').addEventListener('click',()=>{if(mode==='daily'){mode='free';ls.set('netMode',mode)}generate();build()});
-$('modes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;mode=b.dataset.m;ls.set('netMode',mode);generate();build()});
-$('toLbBtn').addEventListener('click',()=>$('lb').scrollIntoView({behavior:'smooth',block:'start'}));
-$('lbRefresh').addEventListener('click',loadBoard);
-
-/* ===== 排行榜 ===== */
-let myIds=ls.get('netMyIds',[]);
-async function loadBoard(){
-  const d=today(), size=n;
-  $('lbTitle').textContent=`今日排行榜 · ${size}×${size}`; $('lbDay').textContent=d;
-  const list=$('lbList'), note=$('lbNote');
-  if(!sb){list.innerHTML='';note.textContent='排行榜還沒連上資料庫。';return}
-  note.textContent='讀取中…';
-  const {data,error}=await sb.from('scores').select('id,name,moves,seconds')
-    .eq('day',d).eq('size',size).order('moves').order('seconds').order('created_at').limit(10);
-  if(size!==n)return; // 讀取途中換了大小
-  if(error){list.innerHTML='';note.textContent='排行榜暫時讀不到，等一下再按重新整理。';return}
-  list.innerHTML='';
-  data.forEach((r,k)=>{
-    const li=document.createElement('li'); if(myIds.includes(r.id))li.className='me';
-    const rk=document.createElement('span');rk.className='rk';rk.textContent=k+1;
-    const nm=document.createElement('span');nm.className='nm';nm.textContent=r.name;
-    const sc=document.createElement('span');sc.className='sc';sc.textContent=`${r.moves} 下 · ${fmt(r.seconds)}`;
-    li.append(rk,nm,sc); list.appendChild(li);
-  });
-  note.textContent=data.length?(mode==='daily'?'':'切到「每日一題」才能上榜。'):'今天還沒有人上榜，搶第一！';
-}
-async function doSubmit(name){
-  if(!lastWin||!sb)return false;
-  const {data,error}=await sb.from('scores').insert({day,size:n,name,moves:lastWin.moves,seconds:lastWin.seconds}).select('id').single();
-  if(error)return false;
-  ls.set('netName',name); myIds.push(data.id); myIds=myIds.slice(-50); ls.set('netMyIds',myIds);
-  const st=ls.get(lastWin.dk,{}); st.submitted=true; ls.set(lastWin.dk,st); lastWin=null;
-  loadBoard(); return true;
-}
-/* 有記住名字：倒數 3 秒自動上榜，想換名字可以按「改名字」 */
-let autoTimer=0;
-function startAuto(name){
-  let left=3; const line=$('autoLine'); line.hidden=false; $('renameBtn').hidden=false;
-  const show=()=>{$('autoText').textContent=`${left} 秒後以「${name}」登上排行榜`};
-  show(); clearInterval(autoTimer);
-  autoTimer=setInterval(async()=>{
-    left--; if(left>0){show();return}
-    clearInterval(autoTimer); $('renameBtn').hidden=true; $('autoText').textContent='送出中…';
-    const ok=await doSubmit(name);
-    if(ok){$('autoText').textContent=`已用「${name}」登上排行榜！`}
-    else{line.hidden=true;$('submitForm').hidden=false;$('nameIn').value=name;$('submitMsg').textContent='自動送出失敗，檢查網路後按送出再試一次。'}
-  },1000);
-}
-$('renameBtn').addEventListener('click',()=>{
-  clearInterval(autoTimer); $('autoLine').hidden=true;
-  $('submitForm').hidden=false; $('nameIn').value=ls.get('netName',''); $('nameIn').focus(); $('nameIn').select();
-});
-$('submitForm').addEventListener('submit',async e=>{
-  e.preventDefault(); if(!lastWin||!sb)return;
-  const name=$('nameIn').value.trim().slice(0,12);
-  if(!name){$('submitMsg').textContent='請先輸入暱稱。';return}
-  $('submitBtn').disabled=true; $('submitMsg').textContent='送出中…';
-  const ok=await doSubmit(name);
-  $('submitBtn').disabled=false;
-  if(!ok){$('submitMsg').textContent='送出失敗，檢查網路後再按一次送出。';return}
-  $('submitForm').hidden=true; $('winText').textContent+=' · 已登上排行榜！';
-});
-
-/* ===== 在線人數 ===== */
-if(sb){
-  try{
-    const me=Math.random().toString(36).slice(2);
-    const ch=sb.channel('online-net-puzzle',{config:{presence:{key:me}}});
-    ch.on('presence',{event:'sync'},()=>{const c=Object.keys(ch.presenceState()).length;$('sOnline').textContent=c;$('onlineWrap').hidden=c<1})
-      .subscribe(async st=>{if(st==='SUBSCRIBED')await ch.track({at:Date.now()})});
-  }catch(e){}
-}
-// 跨過午夜時，每日一題自動換成新的一天
-setInterval(()=>{if(today()!==day&&mode==='daily'&&!startT){generate();build()}},60000);
-$('hintBtn').addEventListener('click',hint);
-
-if(![5,6,7,9].includes(n))n=5;
-if(!['daily','free'].includes(mode))mode='daily';
-generate();build();
+const {$,SIZES,today,dailyKey,ls,streak,sb,icon}=NP;
+document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=icon(e.dataset.ic));
+// 機櫃上的彩色指示燈
+const c=['#ffb547','#5cc8ff','#ff7eb6','#b49cff'];let h='';
+for(let i=0;i<4;i++){const y=12+i*23;h+=`<rect x="29" y="${y}" width="56" height="17" rx="3" fill="#2d3650"/><circle cx="37" cy="${y+8.5}" r="3" fill="${c[i]}"/><circle cx="46" cy="${y+8.5}" r="3" fill="${c[(i+1)%4]}" opacity=".6"/><rect x="56" y="${y+6}" width="22" height="5" rx="2" fill="#1a2030"/>`}
+$('leds').innerHTML=h;
+const d=today(); $('todayLbl').textContent=d.slice(5).replace('-','/');
+let left=0;
+$('prog').innerHTML=SIZES.map(n=>{const r=ls.get(dailyKey(d,n),null);if(!r)left++;
+  return `<a href="daily.html?size=${n}" class="${r?'d':''}" aria-label="${n}×${n} ${r?'已完成':'還沒玩'}">${n}×${n}<b>${r?'✓':'—'}</b></a>`}).join('');
+$('dailySub').textContent=left?`今天還剩 ${left} 題`:'今天全部完成 🎉 明天再來';
+const s=streak(); $('streak').textContent=s?`🔥 連續 ${s} 天`:'完成一題每日一題，開始累積連續天數';
+if(sb) sb.from('scores').select('id',{count:'exact',head:true}).eq('day',d).then(({count,error})=>{
+  if(!error&&count!=null)$('lbSub').textContent=count?`今天已經有 ${count} 筆成績上榜`:'今天還沒有人上榜，搶第一！'});
 })();
 </script>
-
-
 <script data-goatcounter="https://613chumi.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

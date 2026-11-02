@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>自由練習 · 機房接線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="practice">
+<main class="wrap">
+<div class="topbar"><a class="back" href="index.html">← 首頁</a><span class="pill c">🛠 自由練習</span></div>
+<div class="chips" id="sizes" role="group" aria-label="大小"></div>
+<div class="tools"><button class="btn c" id="newBtn" type="button">↻ 新題目</button><button class="btn" id="hintBtn" type="button">💡 提示</button><span class="sub">這個大小最佳 <b id="sBest" style="color:var(--ink);font-family:var(--mono)">—</b> 下</span></div>
+<div class="status" aria-live="polite">
+  <span>連線中 <b id="sOn">0</b> / <b id="sAll">0</b> 台</span>
+  <span>轉了 <b id="sMoves">0</b> 下</span>
+  <span>提示 <b id="sHints">0</b></span>
+  <span class="pill" data-online-wrap hidden><i class="dot"></i><span data-online>1</span> 人在線</span>
+</div>
+<section class="rack" aria-label="盤面">
+  <div class="rackbar"><span id="rackLbl"></span><span class="clock">⏱ <span id="sTime">0:00</span></span></div>
+  <div class="stage">
+    <div class="board" id="board"></div>
+    <div class="cover" id="startCover" hidden><button class="go" id="startBtn" type="button">▶ 開始</button></div>
+    <div class="win" id="win" hidden>
+      <div class="box">
+        <h2 id="winTitle">全部連線 ✓</h2>
+        <p id="winText"></p>
+        <p class="auto" id="autoLine" hidden><span id="autoText"></span> <button class="link" id="renameBtn" type="button">改名字</button></p>
+        <form class="submit" id="submitForm" hidden>
+          <label for="nameIn">留下名字，登上今日排行榜</label>
+          <div class="row"><input id="nameIn" maxlength="12" autocomplete="nickname" placeholder="你的暱稱" required><button class="btn c" type="submit" id="submitBtn">送出</button></div>
+          <p class="msg" id="submitMsg"></p>
+        </form>
+        <div class="btns"><button class="btn c" id="againBtn" type="button">下一題</button><a class="btn" id="toLbBtn" href="leaderboard.html" hidden>看排行榜</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+<p class="sub">練習不會上排行榜，可以無限玩，適合熱身。</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
+<script src="common.js"></script>
+<script src="game.js"></script>
+<script data-goatcounter="https://613chumi.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

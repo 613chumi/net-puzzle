@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>玩法說明 · 機房接線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="howto">
+<main class="wrap">
+<div class="topbar"><a class="back" href="index.html">← 首頁</a><span class="pill c">📖 玩法說明</span></div>
+<h2>怎麼玩</h2>
+<section class="card"><div class="step"><span class="num">1</span><div><h3>轉動格子</h3>點一下格子會順時針轉 90°。確定方向的格子可以長按或按右鍵鎖住，就不會誤點。</div></div>
+  <svg viewBox="0 0 300 70" width="100%" aria-hidden="true">
+    <rect x="10" y="8" width="54" height="54" rx="8" fill="#1f2638"/><path d="M37 8v27h27" stroke="#56617a" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <text x="84" y="44" font-size="22" fill="#b49cff">↻</text>
+    <rect x="112" y="8" width="54" height="54" rx="8" fill="#1f2638"/><path d="M112 35h27v27" stroke="#56617a" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <text x="186" y="44" font-size="22" fill="#b49cff">↻</text>
+    <rect x="214" y="8" width="54" height="54" rx="8" fill="#244a3b"/><path d="M241 62V35H214" stroke="#4fd88f" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </svg></section>
+<section class="card"><div class="step"><span class="num">2</span><div><h3>接上所有伺服器</h3>電流從中間橘色的交換器出發，接到的線會變綠色，伺服器亮綠燈就是接上了。</div></div></section>
+<section class="card"><div class="step"><span class="num">3</span><div><h3>不能有線頭露在外面</h3>每條線都要接到另一條線，全部接好、沒有斷線就過關！</div></div></section>
+<section class="card"><h3>📅 每日一題規則</h3>
+  <ul class="tips"><li>同一天、同一個大小，大家拿到一樣的題目，台灣時間 00:00 換題。</li>
+  <li>每個大小每天只能玩一次，過關後就會鎖住。</li><li>按「開始」才會出現題目並開始計時。</li>
+  <li>轉越少下排越前面，一樣的話比時間。用了提示不能上榜。</li></ul></section>
+<section class="card"><h3>💡 推理小技巧</h3>
+  <ul class="tips"><li>先看四周的邊：線頭不能朝外。</li><li>角落的格子通常只剩一種擺法。</li><li>伺服器不能直接接伺服器。</li><li>外圈確定了，裡面的方向就會一格一格被逼出來。</li></ul></section>
+<section class="card"><h3>⌨️ 鍵盤操作</h3>
+  <span><span class="kbd">↑↓←→</span> 移動 · <span class="kbd">空白鍵</span> 或 <span class="kbd">Enter</span> 旋轉 · <span class="kbd">L</span> 鎖定</span></section>
+<a class="mode" href="daily.html" style="--m:var(--amber)"><span class="ic" data-ic="cal"></span><span><b>開始今天的每日一題</b><small>看懂了就來挑戰吧</small></span><span class="arr">→</span></a>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
+<script src="common.js"></script>
+<script>document.querySelectorAll("[data-ic]").forEach(e=>e.innerHTML=NP.icon(e.dataset.ic));</script>
+<script data-goatcounter="https://613chumi.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

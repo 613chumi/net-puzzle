@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>排行榜 · 機房接線</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="board">
+<main class="wrap">
+<div class="topbar"><a class="back" href="index.html">← 首頁</a><span class="pill c">🏆 排行榜</span></div>
+<div class="chips" id="days" role="group" aria-label="日期">
+  <button class="chip" type="button" data-d="0">今天</button><button class="chip" type="button" data-d="-1">昨天</button>
+  <input class="chip" type="date" id="dateIn" aria-label="選日期">
+</div>
+<div class="chips" id="sizes" role="group" aria-label="大小"></div>
+<h2 id="lbTitle"></h2>
+<div class="podium" id="podium"></div>
+<ol class="list" id="list" start="4"></ol>
+<p class="empty" id="note"></p>
+<section class="card" aria-labelledby="chT">
+  <h3 id="chT">⭐ 昨日冠軍</h3>
+  <div class="champs" id="champs"><span>讀取中…</span></div>
+</section>
+<div class="row" style="display:flex;justify-content:center"><button class="btn" id="refresh" type="button">↻ 重新整理</button></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
+<script src="common.js"></script>
+<script>
+(()=>{
+const {$,SIZES,today,fmt,ls,sb}=NP;
+const qs=new URLSearchParams(location.search);
+let n=+qs.get('size'); if(!SIZES.includes(n)) n=ls.get('netDailySize',5); if(!SIZES.includes(n)) n=5;
+let d=today();
+const myIds=ls.get('netMyIds',[]);
+$('dateIn').max=today();
+function chips(){
+  $('sizes').innerHTML=SIZES.map(s=>`<button type="button" class="chip" data-n="${s}" aria-pressed="${s===n}">${s}×${s}</button>`).join('');
+  document.querySelectorAll('#days [data-d]').forEach(b=>b.setAttribute('aria-pressed',today(+b.dataset.d)===d));
+  $('dateIn').value=d; $('dateIn').setAttribute('aria-pressed',d!==today()&&d!==today(-1));
+}
+async function load(){
+  chips();
+  const label=d===today()?'今天':d===today(-1)?'昨天':d;
+  $('lbTitle').textContent=`${label} · ${n}×${n}`;
+  if(!sb){$('note').textContent='排行榜暫時連不上。';return}
+  $('note').textContent='讀取中…';
+  const size=n, day=d;
+  const {data,error}=await sb.from('scores').select('id,name,moves,seconds').eq('day',day).eq('size',size)
+    .order('moves').order('seconds').order('created_at').limit(30);
+  if(size!==n||day!==d)return;
+  if(error){$('note').textContent='排行榜暫時讀不到，等一下再按重新整理。';return}
+  // 頒獎台：2、1、3 的順序排
+  const medal={1:'👑',2:'🥈',3:'🥉'};
+  $('podium').innerHTML=[2,1,3].map(k=>{const r=data[k-1];
+    if(!r)return `<div class="p p${k} vacant"><span class="medal">${medal[k]}</span><span>虛位以待</span></div>`;
+    return `<div class="p p${k}${myIds.includes(r.id)?' me':''}"><span class="medal">${medal[k]}</span><span class="nm" data-k="${k}"></span><span class="sc">${r.moves} 下 · ${fmt(r.seconds)}</span></div>`}).join('');
+  $('podium').querySelectorAll('.nm').forEach(e=>e.textContent=data[+e.dataset.k-1].name);
+  $('list').innerHTML='';
+  data.slice(3).forEach((r,k)=>{const li=document.createElement('li');if(myIds.includes(r.id))li.className='me';
+    li.innerHTML=`<span class="rk">${k+4}</span><span class="nm"></span><span class="sc">${r.moves} 下 · ${fmt(r.seconds)}</span>`;
+    li.querySelector('.nm').textContent=r.name; $('list').appendChild(li)});
+  $('note').textContent=data.length?'':(d===today()?'今天還沒有人上榜，去每日一題搶第一！':'這一天沒有人上榜。');
+}
+async function champs(){
+  if(!sb){$('champs').innerHTML='<span>暫時連不上</span>';return}
+  const y=today(-1);
+  const rows=await Promise.all(SIZES.map(s=>sb.from('scores').select('name').eq('day',y).eq('size',s).order('moves').order('seconds').order('created_at').limit(1)));
+  $('champs').innerHTML='';
+  SIZES.forEach((s,i)=>{const div=document.createElement('div');const b=document.createElement('b');
+    b.textContent=rows[i].data?.[0]?.name??'—';div.innerHTML=`<span>${s}×${s}</span>`;div.appendChild(b);$('champs').appendChild(div)});
+}
+$('sizes').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;n=+b.dataset.n;load()});
+$('days').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;d=today(+b.dataset.d);load()});
+$('dateIn').addEventListener('change',e=>{if(e.target.value){d=e.target.value;load()}});
+$('refresh').addEventListener('click',()=>{load();champs()});
+load(); champs();
+})();
+</script>
+<script data-goatcounter="https://613chumi.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
