@@ -98,6 +98,7 @@ button:focus-visible{outline:3px solid var(--lock);outline-offset:2px}
     <span>轉了 <b id="sMoves">0</b> 下</span>
     <span>提示 <b id="sHints">0</b></span>
     <span>這個大小最佳 <b id="sBest">—</b></span>
+    <span id="playsWrap" hidden>網站被打開 <b id="sPlays">0</b> 次</span>
   </div>
 
   <div class="rack">
@@ -230,6 +231,7 @@ function win(){
   const key='netBest'+n, best=ls.get(key,null);
   let msg=`${n}×${n} · 轉了 ${moves} 下`+(hints?` · 用了 ${hints} 次提示`:'');
   if(!hints&&(best===null||moves<best)){ls.set(key,moves);msg+=' · 新紀錄！';$('sBest').textContent=moves}
+  try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:'win-'+n+'x'+n,title:'過關 '+n+'×'+n,event:true})}catch(e){}
   $('winText').textContent=msg; $('win').hidden=false; $('againBtn').focus({preventScroll:true});
   locked.fill(false); [...$('board').children].forEach(t=>t.classList.remove('locked'));
 }
@@ -277,5 +279,14 @@ generate();build();
 })();
 </script>
 
+
+<script data-goatcounter="https://613chumi.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script>
+// 讀 GoatCounter 公開的總次數（要在 GoatCounter 設定裡開啟才讀得到）
+fetch('https://613chumi.goatcounter.com/counter/TOTAL.json')
+  .then(r=>r.ok?r.json():Promise.reject())
+  .then(d=>{document.getElementById('sPlays').textContent=d.count;document.getElementById('playsWrap').hidden=false})
+  .catch(()=>{});
+</script>
 </body>
 </html>
